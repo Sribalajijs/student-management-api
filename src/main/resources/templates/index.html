@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Student Management</title>
+    <style>
+        body { font-family: Arial; margin: 40px; }
+        input, button { margin: 5px; padding: 6px; }
+        table { border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid black; padding: 8px; }
+    </style>
+</head>
+<body>
+
+<h2>Student Management</h2>
+
+<!-- INSERT / UPDATE FORM -->
+<input type="hidden" id="studentId">
+
+<input type="text" id="name" placeholder="Name">
+<input type="email" id="email" placeholder="Email">
+
+
+<button onclick="saveStudent()">Save</button>
+<button onclick="updateStudent()">Update</button>
+
+<!-- STUDENT TABLE -->
+<table>
+    <thead>
+        <tr>
+            <th>ID</th><th>Name</th><th>Email</th><th>Actions</th>
+        </tr>
+    </thead>
+    <tbody id="studentTable"></tbody>
+</table>
+
+<script>
+const apiUrl = "http://localhost:8081/students";
+
+// LOAD STUDENTS
+function loadStudents() {
+    fetch(apiUrl)
+        .then(res => res.json())
+        .then(data => {
+            let rows = "";
+            data.forEach(s => {
+                rows += `
+                <tr>
+                    <td>${s.id}</td>
+                    <td>${s.name}</td>
+                    <td>${s.email}</td>
+                        <button onclick="editStudent(${s.id}, '${s.name}','${s.email}')">Edit</button>
+                        <button onclick="deleteStudent(${s.id})">Delete</button>
+                    </td>
+                </tr>`;
+            })
+            document.getElementById("studentTable").innerHTML = rows;
+        });
+}
+
+// INSERT
+function saveStudent() {
+	const student = {
+		    name: document.getElementById("name").value,
+		    email: document.getElementById("email").value
+		};
+
+    fetch(apiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(student)
+    }).then(() => {
+        clearForm();
+        loadStudents();
+    });
+}
+
+// EDIT (Fill Form)
+function editStudent(id, nameVal, emailVal) {
+    studentId.value = id;
+    name.value = nameVal;
+    email.value = emailVal;
+   
+}
+
+// UPDATE
+function updateStudent() {
+    const id = studentId.value;
+    const student = {
+    	    name: document.getElementById("name").value,
+    	    email: document.getElementById("email").value
+    	};
+
+    fetch(`${apiUrl}/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(student)
+    }).then(() => {
+        clearForm();
+        loadStudents();
+    });
+}
+
+// DELETE
+function deleteStudent(id) {
+    fetch(`${apiUrl}/${id}`, { method: "DELETE" })
+        .then(() => loadStudents());
+}
+
+// CLEAR FORM
+function clearForm() {
+    studentId.value = "";
+    name.value = "";
+    email.value = "";
+   
+}
+
+// LOAD ON PAGE OPEN
+loadStudents();
+</script>
+
+</body>
+</html>
